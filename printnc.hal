@@ -25,14 +25,14 @@ net spindle-at-speed    => spindle.0.at-speed
 net probe-in => motion.probe-input
 net din-00 => motion.digital-in-00
 
-net zstep           => parport.0.pin-02-out
-setp parport.0.pin-02-out-reset 1
-setp parport.0.pin-03-out-invert 1
-net zdir            => parport.0.pin-03-out
-net xstep           => parport.0.pin-04-out
+net zstep           => parport.0.pin-04-out
 setp parport.0.pin-04-out-reset 1
-net xdir            => parport.0.pin-05-out
 setp parport.0.pin-05-out-invert 1
+net zdir            => parport.0.pin-05-out
+net xstep           => parport.0.pin-02-out
+setp parport.0.pin-04-out-reset 1
+net xdir            => parport.0.pin-03-out
+setp parport.0.pin-03-out-invert 1
 
 net ystep           => parport.0.pin-06-out
 net ystep           => parport.0.pin-08-out
