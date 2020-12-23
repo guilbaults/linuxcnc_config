@@ -5,7 +5,43 @@ loadrt [KINS]KINEMATICS
 loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
 loadrt hal_parport cfg="0 out"
 setp parport.0.reset-time 3000
-loadrt stepgen step_type=0,0,0
+loadrt stepgen step_type=0,0,0,0
+
+loadrt or2
+addf or2.0 servo-thread
+net all-switches <= or2.0.out
+net home1 => or2.0.in0
+net home2 => or2.0.in1
+
+loadrt lut5
+addf lut5.0 servo-thread
+setp lut5.0.function 0xfffefffe
+# set homing if any joint is currently homing
+net homing <= lut5.0.out
+net homing-1 <= joint.0.homing => lut5.0.in-0
+net homing-2 <= joint.1.homing => lut5.0.in-1
+net homing-3 <= joint.2.homing => lut5.0.in-2
+net homing-4 <= joint.3.homing => lut5.0.in-3
+#net lut5.0.out => homing
+
+#loadrt mux2 count=1
+#loadrt mux_generic config="bb2"
+#addf mux-gen.0 servo-thread
+# if homing, disable all limit switches
+#net homing => mux-gen.0.sel
+#net all-switches => mux_generic.0.in0
+#net 0 => mux_generic.0.in1
+
+loadrt not
+addf not.0 servo-thread
+net homing => not.0.in
+net not-homing <= not.0.out
+
+loadrt and2
+addf and2.0 servo-thread
+net all-limit <= and2.0.out
+net not-homing => and2.0.in0
+net all-switches => and2.0.in1
 
 addf parport.0.read base-thread
 addf stepgen.make-pulses base-thread
@@ -34,13 +70,13 @@ setp parport.0.pin-04-out-reset 1
 net xdir            => parport.0.pin-03-out
 setp parport.0.pin-03-out-invert 1
 
-net ystep           => parport.0.pin-06-out
-net ystep           => parport.0.pin-08-out
+net y1step           => parport.0.pin-08-out
+net y2step           => parport.0.pin-06-out
 setp parport.0.pin-06-out-reset 1
 setp parport.0.pin-08-out-reset 1
 
-net ydir            => parport.0.pin-07-out
-net ydir            => parport.0.pin-09-out
+net y1dir            => parport.0.pin-09-out
+net y2dir            => parport.0.pin-07-out
 
 setp parport.0.pin-07-out-reset 1
 setp parport.0.pin-09-out-reset 1
@@ -48,8 +84,12 @@ setp parport.0.pin-09-out-reset 1
 
 net estop-ext       <= parport.0.pin-10-in-not
 net probe-in        <= parport.0.pin-11-in
-net din-00          <= parport.0.pin-12-in
+net fault           <= parport.0.pin-12-in
 
+net home1           <= parport.0.pin-13-in
+net home2           <= parport.0.pin-15-in
+
+# X
 setp stepgen.0.position-scale [JOINT_0]SCALE
 setp stepgen.0.steplen 1
 setp stepgen.0.stepspace 0
@@ -62,30 +102,60 @@ net xstep <= stepgen.0.step
 net xdir <= stepgen.0.dir
 net xenable joint.0.amp-enable-out => stepgen.0.enable
 
+net home1 => joint.0.home-sw-in
+net all-limit => joint.0.neg-lim-sw-in
+net all-limit => joint.0.pos-lim-sw-in
+
+
+#Y1 joint 1
 setp stepgen.1.position-scale [JOINT_1]SCALE
 setp stepgen.1.steplen 1
 setp stepgen.1.stepspace 0
 setp stepgen.1.dirhold 7000
 setp stepgen.1.dirsetup 10000
 setp stepgen.1.maxaccel [JOINT_1]STEPGEN_MAXACCEL
-net ypos-cmd joint.1.motor-pos-cmd => stepgen.1.position-cmd
-net ypos-fb stepgen.1.position-fb => joint.1.motor-pos-fb
-net ystep <= stepgen.1.step
-net ydir <= stepgen.1.dir
-net yenable joint.1.amp-enable-out => stepgen.1.enable
+net y1pos-cmd joint.1.motor-pos-cmd => stepgen.1.position-cmd
+net y1pos-fb stepgen.1.position-fb => joint.1.motor-pos-fb
+net y1step <= stepgen.1.step
+net y1dir <= stepgen.1.dir
+net y1enable joint.1.amp-enable-out => stepgen.1.enable
+net home1 => joint.1.home-sw-in
+net all-limit => joint.1.neg-lim-sw-in
+net all-limit => joint.1.pos-lim-sw-in
 
+# y2 joint 2
 setp stepgen.2.position-scale [JOINT_2]SCALE
 setp stepgen.2.steplen 1
 setp stepgen.2.stepspace 0
 setp stepgen.2.dirhold 7000
 setp stepgen.2.dirsetup 10000
-setp stepgen.2.maxaccel [JOINT_2]STEPGEN_MAXACCEL
-net zpos-cmd joint.2.motor-pos-cmd => stepgen.2.position-cmd
-net zpos-fb stepgen.2.position-fb => joint.2.motor-pos-fb
-net zstep <= stepgen.2.step
-net zdir <= stepgen.2.dir
-net zenable joint.2.amp-enable-out => stepgen.2.enable
+setp stepgen.2.maxaccel [JOINT_1]STEPGEN_MAXACCEL
+net y2pos-cmd joint.2.motor-pos-cmd => stepgen.2.position-cmd
+net y2pos-fb stepgen.2.position-fb => joint.2.motor-pos-fb
+net y2step <= stepgen.2.step
+net y2dir <= stepgen.2.dir
+net y2enable joint.2.amp-enable-out => stepgen.2.enable
+net home2 => joint.2.home-sw-in
+net all-limit => joint.2.neg-lim-sw-in
+net all-limit => joint.2.pos-lim-sw-in
 
+# z joint3
+setp stepgen.3.position-scale [JOINT_3]SCALE
+setp stepgen.3.steplen 1
+setp stepgen.3.stepspace 0
+setp stepgen.3.dirhold 7000
+setp stepgen.3.dirsetup 10000
+setp stepgen.3.maxaccel [JOINT_3]STEPGEN_MAXACCEL
+net zpos-cmd joint.3.motor-pos-cmd => stepgen.3.position-cmd
+net zpos-fb stepgen.3.position-fb => joint.3.motor-pos-fb
+net zstep <= stepgen.3.step
+net zdir <= stepgen.3.dir
+net zenable joint.3.amp-enable-out => stepgen.3.enable
+net home2 => joint.3.home-sw-in
+net all-limit => joint.3.neg-lim-sw-in
+net all-limit => joint.3.pos-lim-sw-in
+
+# estop
 net estop-out <= iocontrol.0.user-enable-out
 net estop-ext => iocontrol.0.emc-enable-in
 
