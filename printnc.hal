@@ -22,15 +22,6 @@ net homing-1 <= joint.0.homing => lut5.0.in-0
 net homing-2 <= joint.1.homing => lut5.0.in-1
 net homing-3 <= joint.2.homing => lut5.0.in-2
 net homing-4 <= joint.3.homing => lut5.0.in-3
-#net lut5.0.out => homing
-
-#loadrt mux2 count=1
-#loadrt mux_generic config="bb2"
-#addf mux-gen.0 servo-thread
-# if homing, disable all limit switches
-#net homing => mux-gen.0.sel
-#net all-switches => mux_generic.0.in0
-#net 0 => mux_generic.0.in1
 
 loadrt not
 addf not.0 servo-thread
@@ -59,7 +50,6 @@ net spindle-cmd-rps-abs <= spindle.0.speed-out-rps-abs
 net spindle-at-speed    => spindle.0.at-speed
 
 net probe-in => motion.probe-input
-net din-00 => motion.digital-in-00
 
 net zstep           => parport.0.pin-04-out
 setp parport.0.pin-04-out-reset 1
@@ -84,7 +74,7 @@ setp parport.0.pin-09-out-reset 1
 
 net estop-ext       <= parport.0.pin-10-in-not
 net probe-in        <= parport.0.pin-11-in
-net fault           <= parport.0.pin-12-in
+net fault => joint.0.amp-fault-in <= parport.0.pin-12-in-not
 
 net home1           <= parport.0.pin-13-in
 net home2           <= parport.0.pin-15-in
