@@ -54,6 +54,7 @@ net probe-in => motion.probe-input
 net xdir            => parport.0.pin-03-out
 net xstep           => parport.0.pin-02-out
 setp parport.0.pin-02-out-reset 1
+setp parport.0.pin-03-out-invert 1
 
 net y1dir            => parport.0.pin-09-out
 net y2dir            => parport.0.pin-07-out
@@ -65,6 +66,7 @@ setp parport.0.pin-08-out-reset 1
 net zdir            => parport.0.pin-05-out
 net zstep           => parport.0.pin-04-out
 setp parport.0.pin-04-out-reset 1
+setp parport.0.pin-05-out-invert 1
 
 net estop-ext       <= parport.0.pin-10-in-not
 net probe-in        <= parport.0.pin-11-in
