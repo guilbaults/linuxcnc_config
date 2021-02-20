@@ -34,6 +34,13 @@ net all-limit <= and2.0.out
 net not-homing => and2.0.in0
 net all-switches => and2.0.in1
 
+loadrt siggen
+addf siggen.0.update servo-thread
+setp siggen.0.frequency 2
+
+loadrt mux_generic config="bb4"
+addf mux-gen.00 servo-thread
+
 addf parport.0.read base-thread
 addf stepgen.make-pulses base-thread
 addf parport.0.write base-thread
@@ -144,6 +151,17 @@ net all-limit => joint.3.pos-lim-sw-in
 # estop
 net estop-out <= iocontrol.0.user-enable-out
 net estop-ext => iocontrol.0.emc-enable-in
+
+# coolant
+setp mux-gen.00.in-bit-00 0
+setp mux-gen.00.in-bit-01 1
+net pulse siggen.0.clock => mux-gen.00.in-bit-02
+setp mux-gen.00.in-bit-03 1
+
+net flood iocontrol.0.coolant-flood mux-gen.00.sel-bit-00
+net mist iocontrol.0.coolant-mist mux-gen.00.sel-bit-01
+net coolant <= mux-gen.00.out-bit
+net coolant => parport.0.pin-17-out
 
 loadusr -W hal_manualtoolchange
 net tool-change iocontrol.0.tool-change => hal_manualtoolchange.change
