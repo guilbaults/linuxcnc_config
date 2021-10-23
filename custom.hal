@@ -14,3 +14,6 @@ net hy-on <= spindle.0.on => spindle-vfd.spindle-on
 # connect the spindle RPM to the VFD
 # Note: spindle-cmd created by stepconf wizard
 net spindle-cmd-rpm-abs => spindle-vfd.speed-command
+
+net spindle-at-speed => spindle-vfd.spindle-at-speed
+net spindle-at-speed <= spindle.0.at-speed
