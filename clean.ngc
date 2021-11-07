@@ -1,0 +1,9 @@
+o<clean> sub
+M70
+M5
+G53 Z0
+G53 X0 Y0
+
+M1
+M72
+o<clean> endsub
